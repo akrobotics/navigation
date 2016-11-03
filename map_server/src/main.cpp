@@ -44,6 +44,8 @@
 #include "ros/console.h"
 #include "map_server/image_loader.h"
 #include "nav_msgs/MapMetaData.h"
+#include "nav_msgs/GetMap.h"
+#include "nav_msgs/SetMap.h"
 #include "yaml-cpp/yaml.h"
 
 #ifdef HAVE_NEW_YAMLCPP
@@ -175,7 +177,8 @@ class MapServer
                map_resp_.map.info.resolution);
       meta_data_message_ = map_resp_.map.info;
 
-      service = n.advertiseService("static_map", &MapServer::mapCallback, this);
+      get_map_service = n.advertiseService("static_map", &MapServer::getMapCallback, this);
+      set_map_service = n.advertiseService("set_map", &MapServer::setMapCallback, this);
       //pub = n.advertise<nav_msgs::MapMetaData>("map_metadata", 1,
 
       // Latched publisher for metadata
@@ -191,12 +194,13 @@ class MapServer
     ros::NodeHandle n;
     ros::Publisher map_pub;
     ros::Publisher metadata_pub;
-    ros::ServiceServer service;
+    ros::ServiceServer get_map_service;
+    ros::ServiceServer set_map_service;
     bool deprecated;
 
-    /** Callback invoked when someone requests our service */
-    bool mapCallback(nav_msgs::GetMap::Request  &req,
-                     nav_msgs::GetMap::Response &res )
+    /** Callback invoked when someone requests a copy of the map */
+    bool getMapCallback(nav_msgs::GetMap::Request  &req,
+                        nav_msgs::GetMap::Response &res)
     {
       // request is empty; we ignore it
 
@@ -205,6 +209,26 @@ class MapServer
       ROS_INFO("Sending map");
 
       return true;
+    }
+
+    /** Callback invoked when someone requests a new map to be served */
+    bool setMapCallback(nav_msgs::SetMap::Request &req,
+                        nav_msgs::SetMap::Response &res)
+    {
+      // Update map data and metadata
+      map_resp_.map = req.map;
+      meta_data_message_ = map_resp_.map.info;
+
+      ROS_INFO("Setting new %d X %d map @ %.3lf m/cell",
+               map_resp_.map.info.width,
+               map_resp_.map.info.height,
+               map_resp_.map.info.resolution);
+
+      // Update latched publishers
+      map_pub.publish( map_resp_.map );
+      metadata_pub.publish( meta_data_message_ );
+
+      res.success = true;
     }
 
     /** The map data is cached here, to be sent out to service callers
