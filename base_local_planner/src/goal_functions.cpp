@@ -118,6 +118,10 @@ namespace base_local_planner {
       double dist_threshold = std::max(costmap.getSizeInCellsX() * costmap.getResolution() / 2.0,
                                        costmap.getSizeInCellsY() * costmap.getResolution() / 2.0);
 
+      // We don't want to plan only a meter ahead even though our local cost map may be larger
+      // TODO(Bikram): dist_threshold should be exactly current speed * sim_time
+      dist_threshold = 0.5;
+
       unsigned int i = 0;
       double sq_dist_threshold = dist_threshold * dist_threshold;
       double sq_dist = 0;

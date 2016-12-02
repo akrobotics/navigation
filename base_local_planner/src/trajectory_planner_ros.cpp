@@ -378,13 +378,14 @@ namespace base_local_planner {
 
   bool TrajectoryPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel){
     if (! isInitialized()) {
-      ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
+      ROS_ERROR("[]This planner has not been initialized, please call initialize() before using this planner");
       return false;
     }
 
     std::vector<geometry_msgs::PoseStamped> local_plan;
     tf::Stamped<tf::Pose> global_pose;
     if (!costmap_ros_->getRobotPose(global_pose)) {
+      ROS_WARN("[Local Planner-AK] Failed at !costmap_ros_->getRobotPose(global_pose)");      
       return false;
     }
 
@@ -413,7 +414,10 @@ namespace base_local_planner {
 
     //if the global plan passed in is empty... we won't do anything
     if(transformed_plan.empty())
+    {
+      ROS_WARN("[Local Planner-AK] Failed at transformed_plan.empty()");      
       return false;
+    }
 
     tf::Stamped<tf::Pose> goal_point;
     tf::poseStampedMsgToTF(transformed_plan.back(), goal_point);
@@ -466,6 +470,7 @@ namespace base_local_planner {
           //set this so that we know its OK to be moving
           rotating_to_goal_ = true;
           if(!rotateToGoal(global_pose, robot_vel, goal_th, cmd_vel)) {
+            ROS_WARN("[Local Planner-AK] Failed at rotateToGoal(global_pose, robot_vel, goal_th, cmd_vel)");      
             return false;
           }
         }
