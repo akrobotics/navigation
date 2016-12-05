@@ -120,7 +120,7 @@ namespace base_local_planner {
 
       // We don't want to plan only a meter ahead even though our local cost map may be larger
       // TODO(Bikram): dist_threshold should be exactly current speed * sim_time
-      double dist_threshold = costmap.getSizeInCellsX() * costmap.getResolution() / 4.0;
+      double dist_threshold = costmap.getSizeInCellsX() * costmap.getResolution() / 8.0;
 
       unsigned int i = 0;
       double sq_dist_threshold = dist_threshold * dist_threshold;
